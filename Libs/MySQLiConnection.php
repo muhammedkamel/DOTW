@@ -6,7 +6,7 @@ require_once __DIR__ . '/../Configs/config.php';
 
 use DOTW\Libs\IDB;
 
-class PDO implements IDB {
+class MySQLiConnection implements IDB {
 
 	private $conn;
 	private $stmt;
@@ -18,9 +18,8 @@ class PDO implements IDB {
 	 */
 	public function __construct() {
 		try {
-			$this->conn = new PDO(DRIVER . 'dbname=' . DBNAME . ';host=' . HOST, USERNAME, PASSWORD);
-			$this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		} catch (PDOException $e) {
+			$this->conn = new mysqli(HOST, USERNAME, PASSWORD, DBNAME);
+		} catch (Exception $e) {
 			echo $e->getMessage();
 			die();
 		}
@@ -34,12 +33,12 @@ class PDO implements IDB {
 	 * @return $result PDO object the columns values of the row or false
 	 *
 	 */
-	public function selectOne(string $query, array $bindings = []): PDO{
+	public function selectOne(string $query, array $bindings = []): PDOConnection{
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
 		$stmt->execute();
 		$this->stmt = $stmt;
-		return $stmt->fetchObject(__CLASS__);
+		return $this->stmt->fetchObject(__CLASS__);
 	}
 
 	/**
@@ -51,12 +50,11 @@ class PDO implements IDB {
 	 *
 	 */
 	public function select(string $query, array $bindings = []): array{
-		$this->query = $query;
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
 		$stmt->execute();
 		$this->stmt = $stmt;
-		return $stmt->fetchAll(PDO::FETCH_CLASS, __CLASS__);
+		return $this->stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
 	}
 
 	/**
@@ -64,16 +62,15 @@ class PDO implements IDB {
 	 * Method to insert
 	 * @param $query string
 	 * @param $bindings array
-	 * @return boolean
+	 * @return bool
 	 *
 	 */
-	public function insert(string $query, array $bindings = []): boolean{
-		$this->query = $query;
+	public function insert(string $query, array $bindings = []): bool{
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
-		$stmt->execute();
+		$result = $stmt->execute();
 		$this->stmt = $stmt;
-		return $stmt;
+		return $result;
 	}
 
 	/**
@@ -81,16 +78,15 @@ class PDO implements IDB {
 	 * Method to update
 	 * @param $query string
 	 * @param $bindings array
-	 * @return boolean
+	 * @return bool
 	 *
 	 */
-	public function update(string $query, array $bindings = []): boolean{
-		$this->query = $query;
+	public function update(string $query, array $bindings = []): bool{
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
-		$stmt->execute();
+		$result = $stmt->execute();
 		$this->stmt = $stmt;
-		return $stmt;
+		return $result;
 	}
 
 	/**
@@ -98,16 +94,15 @@ class PDO implements IDB {
 	 * Method to delete
 	 * @param $query string
 	 * @param $bindings array
-	 * @return boolean
+	 * @return bool
 	 *
 	 */
-	public function delete(string $query, array $bindings = []): boolean{
-		$this->query = $query;
+	public function delete(string $query, array $bindings = []): bool{
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
-		$stmt->execute();
+		$result = $stmt->execute();
 		$this->stmt = $stmt;
-		return $stmt;
+		return $result;
 	}
 
 	/**
@@ -125,15 +120,15 @@ class PDO implements IDB {
 	 * Method to bind all values with there types
 	 * @param $stmt PDOStatement object
 	 * @param $bindings array
-	 * @return $stmt PDOStatement object
 	 *
 	 */
-	private function bindValues(PDOStatement $stmt, array $bindings): PDOStatement {
-		foreach ($bindings as $key => $value) {
-			if (is_int($value)) {
-				$stmt->bindValues($key, $value, PDO::PARAM_INT);
+	private function bindValues(\PDOStatement $stmt, array $bindings): \PDOStatement {
+		for ($i = 0; $i < count($bindings); $i++) {
+			$param = $i + 1;
+			if (is_int($bindings[$i])) {
+				$stmt->bindParam($param, $bindings[$i], \PDO::PARAM_INT);
 			} else {
-				$stmt->bindValues($key, $value, PDO::PARAM_STR);
+				$stmt->bindParam($param, $bindings[$i], \PDO::PARAM_STR);
 			}
 		}
 		return $stmt;
