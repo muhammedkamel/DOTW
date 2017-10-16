@@ -18,7 +18,7 @@ class MySQLiConnection implements IDB {
 	 */
 	public function __construct() {
 		try {
-			$this->conn = new mysqli(HOST, USERNAME, PASSWORD, DBNAME);
+			$this->conn = new \mysqli(HOST, USERNAME, PASSWORD, DBNAME);
 		} catch (Exception $e) {
 			echo $e->getMessage();
 			die();
@@ -33,12 +33,13 @@ class MySQLiConnection implements IDB {
 	 * @return $result PDO object the columns values of the row or false
 	 *
 	 */
-	public function selectOne(string $query, array $bindings = []): PDOConnection{
+	public function selectOne(string $query, array $bindings = []): MySQLiConnection{
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
 		$stmt->execute();
+		$result = $stmt->get_result();
 		$this->stmt = $stmt;
-		return $this->stmt->fetchObject(__CLASS__);
+		return $result->fetch_object(__CLASS__);
 	}
 
 	/**
@@ -53,8 +54,13 @@ class MySQLiConnection implements IDB {
 		$stmt = $this->conn->prepare($query);
 		$stmt = $this->bindValues($stmt, $bindings);
 		$stmt->execute();
+		$result = $stmt->get_result();
 		$this->stmt = $stmt;
-		return $this->stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+		$results = [];
+		while ($row = $result->fetch_object(__CLASS__)) {
+			$results[] = $row;
+		}
+		return $results;
 	}
 
 	/**
@@ -112,7 +118,7 @@ class MySQLiConnection implements IDB {
 	 *
 	 */
 	public function affectedRows(): int {
-		return $this->stmt->rowCount();
+		return $this->stmt->affected_rows;
 	}
 
 	/**
@@ -122,15 +128,27 @@ class MySQLiConnection implements IDB {
 	 * @param $bindings array
 	 *
 	 */
-	private function bindValues(\PDOStatement $stmt, array $bindings): \PDOStatement {
-		for ($i = 0; $i < count($bindings); $i++) {
-			$param = $i + 1;
-			if (is_int($bindings[$i])) {
-				$stmt->bindParam($param, $bindings[$i], \PDO::PARAM_INT);
-			} else {
-				$stmt->bindParam($param, $bindings[$i], \PDO::PARAM_STR);
+	private function bindValues($stmt, array $bindings) {
+		if ($bindings) {
+			$params = [];
+			$types = '';
+			foreach ($bindings as $value) {
+				if (is_int($value)) {
+					$types .= 'i';
+				} else {
+					$types .= 's';
+				}
 			}
+			$params[] = &$types;
+			for ($i = 0; $i < count($bindings); $i++) {
+				$params[] = &$bindings[$i];
+			}
+			call_user_func_array(array($stmt, 'bind_param'), $params);
 		}
 		return $stmt;
+	}
+
+	public function __destruct() {
+		$this->conn->close();
 	}
 }
