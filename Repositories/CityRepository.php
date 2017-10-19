@@ -57,7 +57,12 @@ class CityRepository implements ICityRepository {
 	private function bindCities($cities): string{
 		$values = '';
 		foreach ($cities as $city) {
-			$values .= '(' . preg_replace('/\w+/', '?', implode(',', $city)) . '),';
+			$values .= '(';
+			foreach ($city as $field) {
+				$values .= '?,';
+			}
+			$values = rtrim($values, ',');
+			$values .= '),';
 		}
 		return rtrim($values, ',');
 	}

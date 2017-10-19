@@ -18,11 +18,26 @@ class CountriesController {
 		$this->repo = new CountryRepository;
 	}
 
+	/**
+	 *
+	 * Method to get add country
+	 * @param $code int
+	 * @param $name string
+	 * @return bool
+	 *
+	 */
 	public function addCountry($code, $name) {
 		$this->country = new Country($code, $name);
-		$this->country->save();
+		return $this->country->save();
 	}
 
+	/**
+	 *
+	 * Method to get all countries by sending xml request to the DOTW
+	 * @param $code int
+	 * @return object
+	 *
+	 */
 	public function getCountry($code) {
 		return $this->repo->getCountryByCode($code);
 	}
