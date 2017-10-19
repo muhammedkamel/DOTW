@@ -2,9 +2,11 @@
 namespace DOTW\Controllers;
 
 require_once __DIR__ . '/../Models/Country.php';
-require_once __DIR__ . '/../Helpers/APIBrocker.php';
+require_once __DIR__ . '/../Helpers/APIBroker.php';
+require_once __DIR__ . '/../Helpers/FileReader.php';
 
-use DOTW\Helpers\APIBrocker as APIBrocker;
+use DOTW\Helpers\APIBroker as APIBroker;
+use DOTW\Helpers\FileReader as FileReader;
 use DOTW\Models\Country as Country;
 use DOTW\Repositories\CountryRepository as CountryRepository;
 
@@ -12,7 +14,8 @@ class CountriesController {
 
 	private $country;
 	private $repo;
-	private $brocker;
+	private $broker;
+	private $fileReader;
 
 	public function __construct() {
 		$this->repo = new CountryRepository;
@@ -20,7 +23,7 @@ class CountriesController {
 
 	/**
 	 *
-	 * Method to get add country
+	 * Method to  add country
 	 * @param $code int
 	 * @param $name string
 	 * @return bool
@@ -33,7 +36,7 @@ class CountriesController {
 
 	/**
 	 *
-	 * Method to get all countries by sending xml request to the DOTW
+	 * Method to get country with country code
 	 * @param $code int
 	 * @return object
 	 *
@@ -66,20 +69,17 @@ class CountriesController {
 	 *
 	 */
 	private function requestCountries() {
-		$this->brocker = new APIBrocker;
-		ob_start();
-		?>
-		<?xml version="1.0" encoding="UTF-8"?>
-		<customer>
-			<username><?=API_USERNAME?></username>
-			<password><?=API_PASSWORD?></password>
-			<id><?=API_CODE?></id>
-			<source><?=API_SOURCE?></source>
-			<request command="getallcountries"></request>
-		</customer>
-		<?php
-$request = ob_get_clean();
-		return $this->extractCountries($this->brocker->doRequest($request, 'getallcountries'));
+		$this->broker = new APIBroker;
+		$this->fileReader = new FileReader(REQUESTS . '/static-data.xml');
+		$requestParams = [
+			'%username%' => API_USERNAME,
+			'%password%' => API_PASSWORD,
+			'%code%' => API_CODE,
+			'%source%' => API_SOURCE,
+			'%action%' => 'getallcountries',
+		];
+		$request = str_replace(array_keys($requestParams), array_values($requestParams), $this->fileReader->readfile());
+		return $this->extractCountries($this->broker->doRequest(trim($request), 'getallcountries'));
 	}
 
 	/**

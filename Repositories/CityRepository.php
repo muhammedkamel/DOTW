@@ -24,7 +24,7 @@ class CityRepository implements ICityRepository {
 	/**
 	 *
 	 * Method to insert new city
-	 * @param $id int
+	 * @param $code int
 	 * @param $name string
 	 * @param $country_code int
 	 * @return bool
@@ -70,7 +70,7 @@ class CityRepository implements ICityRepository {
 	/**
 	 *
 	 * Method to get the bindings array
-	 * @param $array array
+	 * @param $cities array
 	 * @return array
 	 *
 	 */

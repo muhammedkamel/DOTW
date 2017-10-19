@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customer>
+<username>%username%</username>
+<password>%password%</password>
+<id>%code%</id>
+<source>%source%</source>
+<request command="%action%"></request>
+</customer>

@@ -6,6 +6,8 @@ define('HOST', 'localhost');
 define('DBNAME', 'dotw');
 define('DRIVER', 'mysql');
 
+define('REQUESTS', __DIR__ . '/../XMLRequests');
+
 define('API_USERNAME', 'cool16');
 define('API_PASSWORD', '596d59dcd8726d6559806b377a828e62');
 define('API_CODE', '1319485');
